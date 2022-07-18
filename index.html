@@ -83,10 +83,22 @@
         }).addTo(map);
 
         map.on('draw:created', function(e) {
-            // Each time a feaute is created, it's added to the over arching feature group
-            featureGroup.addLayer(e.layer);
-        });
 
+            var layer = e.layer,
+                feature = layer.feature = layer.feature || {};
+
+            feature.type = feature.type || "Feature";
+
+            var props = feature.properties = feature.properties || {};
+
+            props.name = null;
+            props.description = null;
+
+            // Each time a feature is created, it is added to the over arching feature group
+            featureGroup.addLayer(layer);
+
+            addPopup(layer);
+        });
 
         // on click, clear all layers
         document.getElementById('delete').onclick = function(e) {
@@ -104,6 +116,46 @@
             document.getElementById('export').setAttribute('href', 'data:' + convertedData);
             document.getElementById('export').setAttribute('download','data.geojson');
         }
+
+        function addPopup(layer) {
+
+          // Create an input form
+          var formDiv = document.createElement("div");
+          var form = formDiv.appendChild(document.createElement('form'));
+          form.name = 'input';
+
+          // Create a text box to enter the name
+          form.appendChild(document.createTextNode('Name: '));
+          var placeName = form.appendChild(document.createElement('input'));
+          placeName.type = 'text';
+          placeName.id = 'text';
+          placeName.name = 'tex';
+          placeName.value = '';
+
+          // Add a line break in the form
+          form.appendChild(document.createElement("br"));
+
+          // Create a text box to enter the description
+          form.appendChild(document.createTextNode('Description: '));
+          var placeDescription = form.appendChild(document.createElement('input'));
+          placeDescription.type = 'text';
+          placeDescription.id = 'text';
+          placeDescription.name = 'tex';
+          placeDescription.value = '';
+
+          // Listen for a keyup
+          form.addEventListener("keyup", function () {
+            layer.feature.properties.name = placeName.value;
+            layer.feature.properties.description = placeDescription.value;
+          });
+          layer.on("popupopen", function () {
+            placeName.value = layer.feature.properties.name;
+            placeDescription.value = layer.feature.properties.description;
+            form.focus();
+          });
+          layer.bindPopup(form).openPopup();
+        }
+
     </script>
 
 </body>
