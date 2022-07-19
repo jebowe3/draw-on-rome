@@ -76,6 +76,19 @@
 
         var featureGroup = L.featureGroup().addTo(map);
 
+        var lineGroup = {
+          type: 'FeatureCollection',
+          features: []
+        };
+        var polyGroup = {
+          type: 'FeatureCollection',
+          features: []
+        };
+        var pointGroup = {
+          type: 'FeatureCollection',
+          features: []
+        };
+
         var drawControl = new L.Control.Draw({
             edit: {
                 featureGroup: featureGroup
@@ -106,15 +119,59 @@
         }
 
         document.getElementById('export').onclick = function(e) {
+
             // Extract GeoJson from featureGroup
             var data = featureGroup.toGeoJSON();
 
             // Stringify the GeoJson
             var convertedData = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data));
 
+            for (var i = 0; i < data.features.length; i++) {
+
+              var feature = data.features[i];
+              var geomType = feature.geometry.type;
+
+              if (geomType == "LineString") {
+                //console.log(feature);
+                lineGroup.features.push(feature);
+              } if (geomType == "Polygon") {
+                //console.log(feature);
+                polyGroup.features.push(feature);
+              } if (geomType == "Point") {
+                //console.log(feature);
+                pointGroup.features.push(feature);
+              }
+
+            };
+
+            downloadObjectAsJson(lineGroup, 'lineData');
+            downloadObjectAsJson(polyGroup, 'polyData');
+            downloadObjectAsJson(pointGroup, 'pointData');
+/*
+            var convertedLine = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(lineGroup));
+            var convertedPoly = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(polyGroup));
+            var convertedPoint = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(pointGroup));
+
+            const geoms = [convertedLine, convertedPoly, convertedPoint];
+
+            for (var i = 0; i < geoms.length; i++) {
+              //var download = filesForDownload[i];
+              document.getElementById('export').setAttribute('href', 'data:' + geoms[i]);
+              document.getElementById('export').setAttribute('download', null);
+            }
+*/
             // Create export
-            document.getElementById('export').setAttribute('href', 'data:' + convertedData);
-            document.getElementById('export').setAttribute('download','data.geojson');
+            //document.getElementById('export').setAttribute('href', 'data:' + convertedData);
+/*
+            document.getElementById('export').setAttribute('href', 'data:' + convertedLine);
+            document.getElementById('export').setAttribute('download','lineData.geojson');
+
+            document.getElementById('export').setAttribute('href', 'data:' + convertedPoly);
+            document.getElementById('export').setAttribute('download','polyData.geojson');
+
+            document.getElementById('export').setAttribute('href', 'data:' + convertedPoint);
+            document.getElementById('export').setAttribute('download','pointData.geojson');
+*/
         }
 
         function addPopup(layer) {
@@ -154,6 +211,15 @@
             form.focus();
           });
           layer.bindPopup(form).openPopup();
+        }
+
+        function downloadObjectAsJson(exportObj, exportName){
+          var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+          var downloadAnchorNode = document.createElement('a');
+          downloadAnchorNode.setAttribute("href",     dataStr);
+          downloadAnchorNode.setAttribute("download", exportName + ".geojson");
+          downloadAnchorNode.click();
+          downloadAnchorNode.remove();
         }
 
     </script>
