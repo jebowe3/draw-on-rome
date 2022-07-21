@@ -15,6 +15,9 @@
     <link rel='stylesheet' href='//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.css' />
     <script src='//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.js'></script>
 
+    <!--Add papaparse to convert json files to csv files and bring in google spreadsheet data-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js "></script>
+
     <style>
         body {
             margin: 0;
@@ -53,7 +56,7 @@
     <a href='#' id='export'>Export Features</a>
 
     <script>
-        var map = L.map('map')
+        const map = L.map('map')
             .setView([41.893333, 12.482778], 14);
 
         // Add layers to the map
@@ -74,22 +77,22 @@
             })
         }).addTo(map);
 
-        var featureGroup = L.featureGroup().addTo(map);
+        const featureGroup = L.featureGroup().addTo(map);
 
-        var lineGroup = {
+        const lineGroup = {
           type: 'FeatureCollection',
           features: []
         };
-        var polyGroup = {
+        const polyGroup = {
           type: 'FeatureCollection',
           features: []
         };
-        var pointGroup = {
+        const pointGroup = {
           type: 'FeatureCollection',
           features: []
         };
 
-        var drawControl = new L.Control.Draw({
+        const drawControl = new L.Control.Draw({
             edit: {
                 featureGroup: featureGroup
             }
@@ -97,14 +100,15 @@
 
         map.on('draw:created', function(e) {
 
-            var layer = e.layer,
+            const layer = e.layer,
                 feature = layer.feature = layer.feature || {};
 
             feature.type = feature.type || "Feature";
 
-            var props = feature.properties = feature.properties || {};
+            const props = feature.properties = feature.properties || {};
 
             props.name = null;
+            props.year = null;
             props.description = null;
 
             // Each time a feature is created, it is added to the over arching feature group
@@ -121,15 +125,15 @@
         document.getElementById('export').onclick = function(e) {
 
             // Extract GeoJson from featureGroup
-            var data = featureGroup.toGeoJSON();
+            const data = featureGroup.toGeoJSON();
 
             // Stringify the GeoJson
-            var convertedData = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data));
+            const convertedData = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data));
 
             for (var i = 0; i < data.features.length; i++) {
 
-              var feature = data.features[i];
-              var geomType = feature.geometry.type;
+              const feature = data.features[i];
+              const geomType = feature.geometry.type;
 
               if (geomType == "LineString") {
                 //console.log(feature);
@@ -144,83 +148,93 @@
 
             };
 
-            downloadObjectAsJson(lineGroup, 'lineData');
-            downloadObjectAsJson(polyGroup, 'polyData');
-            downloadObjectAsJson(pointGroup, 'pointData');
-/*
-            var convertedLine = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(lineGroup));
-            var convertedPoly = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(polyGroup));
-            var convertedPoint = 'text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(pointGroup));
-
-            const geoms = [convertedLine, convertedPoly, convertedPoint];
-
-            for (var i = 0; i < geoms.length; i++) {
-              //var download = filesForDownload[i];
-              document.getElementById('export').setAttribute('href', 'data:' + geoms[i]);
-              document.getElementById('export').setAttribute('download', null);
+            // download each file as geojson and convert to csv if data exist
+            if (lineGroup.features.length > 0) {
+              json2csv(lineGroup);
+              downloadObjectAsJson(lineGroup, 'lineData');
+            } if (polyGroup.features.length > 0) {
+              json2csv(polyGroup);
+              downloadObjectAsJson(polyGroup, 'polyData');
+            } if (pointGroup.features.length > 0) {
+              json2csv(pointGroup);
+              downloadObjectAsJson(pointGroup, 'pointData');
             }
-*/
-            // Create export
-            //document.getElementById('export').setAttribute('href', 'data:' + convertedData);
-/*
-            document.getElementById('export').setAttribute('href', 'data:' + convertedLine);
-            document.getElementById('export').setAttribute('download','lineData.geojson');
 
-            document.getElementById('export').setAttribute('href', 'data:' + convertedPoly);
-            document.getElementById('export').setAttribute('download','polyData.geojson');
-
-            document.getElementById('export').setAttribute('href', 'data:' + convertedPoint);
-            document.getElementById('export').setAttribute('download','pointData.geojson');
-*/
-        }
+        };
 
         function addPopup(layer) {
 
           // Create an input form
-          var formDiv = document.createElement("div");
-          var form = formDiv.appendChild(document.createElement('form'));
+          const formDiv = document.createElement("div");
+          const form = formDiv.appendChild(document.createElement('form'));
           form.name = 'input';
 
           // Create a text box to enter the name
           form.appendChild(document.createTextNode('Name: '));
-          var placeName = form.appendChild(document.createElement('input'));
+          const placeName = form.appendChild(document.createElement('input'));
           placeName.type = 'text';
-          placeName.id = 'text';
-          placeName.name = 'tex';
+          placeName.id = 'nameText';
+          placeName.name = 'nameTex';
           placeName.value = '';
+
+          // Add a line break in the form
+          form.appendChild(document.createElement("br"));
+
+          // Create a text box to enter the year
+          form.appendChild(document.createTextNode('Year: '));
+          const placeYear = form.appendChild(document.createElement('input'));
+          placeYear.type = 'text';
+          placeYear.id = 'yearText';
+          placeYear.name = 'yearTex';
+          placeYear.value = '';
 
           // Add a line break in the form
           form.appendChild(document.createElement("br"));
 
           // Create a text box to enter the description
           form.appendChild(document.createTextNode('Description: '));
-          var placeDescription = form.appendChild(document.createElement('input'));
+          const placeDescription = form.appendChild(document.createElement('input'));
           placeDescription.type = 'text';
-          placeDescription.id = 'text';
-          placeDescription.name = 'tex';
+          placeDescription.id = 'descripText';
+          placeDescription.name = 'descripTex';
           placeDescription.value = '';
 
           // Listen for a keyup
           form.addEventListener("keyup", function () {
             layer.feature.properties.name = placeName.value;
+            layer.feature.properties.year = placeYear.value;
             layer.feature.properties.description = placeDescription.value;
           });
           layer.on("popupopen", function () {
             placeName.value = layer.feature.properties.name;
+            placeYear.value = layer.feature.properties.year;
             placeDescription.value = layer.feature.properties.description;
             form.focus();
           });
           layer.bindPopup(form).openPopup();
-        }
+        };
 
+        // a function to download the digitized data in geojson files
         function downloadObjectAsJson(exportObj, exportName){
-          var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
-          var downloadAnchorNode = document.createElement('a');
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj));
+          const downloadAnchorNode = document.createElement('a');
           downloadAnchorNode.setAttribute("href",     dataStr);
           downloadAnchorNode.setAttribute("download", exportName + ".geojson");
           downloadAnchorNode.click();
           downloadAnchorNode.remove();
-        }
+        };
+
+        // a function to convert json to csv format
+        function json2csv(layer) {
+          const items = layer.features;
+          const replacer = (key, value) => value === null ? '' : value; // specify how you want to handle null values here
+          const header = Object.keys(items[0]);
+          const csv = [
+            header.join(','), // header row first
+            ...items.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
+          ].join('\r\n');
+          console.log(csv);
+        };
 
     </script>
 
