@@ -56,26 +56,110 @@
     <a href='#' id='export'>Export Features</a>
 
     <script>
+        // Define the map
         const map = L.map('map')
             .setView([41.893333, 12.482778], 14);
 
+        // Define the contemporary street map
+        const contemporary = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        });
+
+        // Define the Giuseppe Grande map
+        const ancient = L.tileLayer('https://raw.githubusercontent.com/jebowe3/rome-giuseppe-grande/main/{z}/{x}/{y}.png', {
+          tms: true,
+          opacity: 1,
+          attribution: "",
+          minZoom: 11,
+          maxZoom: 17
+        });
+
+        // Define a layer group displaying the Grande map as an overlay to the contemporary map
+        const ancientOver = L.layerGroup([contemporary, ancient]).addTo(map);
+
         // Add layers to the map
         L.control.layers({
+/*
             'Satellite Map': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
               attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
             }).addTo(map),
+*/
             'Street Map': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            	maxZoom: 19,
-            	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              maxZoom: 19,
+              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }),
-            'Giuseppe Grande': L.tileLayer('https://raw.githubusercontent.com/jebowe3/rome-giuseppe-grande/main/{z}/{x}/{y}.png', {
-              tms: true,
-              opacity: 1,
-              attribution: "",
-              minZoom: 11,
-              maxZoom: 17
-            })
+            'Giuseppe Grande': ancientOver
         }).addTo(map);
+
+
+        // THE FOLLOWING CODE BRINGS GOOGLE SHEET DATA INTO THE MAP
+        // Define variables for later use.
+        // Lines
+        let lineLocation;
+        let lines;
+        let lineAppUrl = "https://script.google.com/macros/s/AKfycbwtKts2LMHDz4Vu3x4qie9eUJ8lWE5NmoCbApqzZ3iab63r0SNJSvTNVb3ql5lludeU/exec";
+        // Polygons
+        let polygonLocation;
+        let polygons;
+        let polygonAppUrl = "https://script.google.com/macros/s/AKfycbyJqhYZb4aophEnTYXwd62Re8pCWiE5_1qli8oBpK2PzfE20die8jVcG-OrRhTBh4uuZQ/exec";
+
+        // Function to load lines from Google sheet
+        function reloadLineLayer(){
+          // Perform a HTTP GET request, which should return our GeoJson.
+          fetch(lineAppUrl)
+          .then(response => response.json())
+          .then(data => {
+            // If the map has the lines layer, remove it.
+            if(map.hasLayer(lines)){
+              map.removeLayer(lines)
+            }
+            // Redefine the lines layer, and add to the map.
+            lines = L.geoJson(data, {
+              onEachFeature: function(feature, layer){
+                if (feature.properties && feature.properties.name && feature.properties.year && feature.properties.description) {
+                  layer.bindPopup(
+                    "Name: " + feature.properties.name +
+                    "<br>Year: " + feature.properties.year +
+                    "<br>Description: " + feature.properties.description
+                  );
+                }
+              }
+            })
+            map.addLayer(lines);
+          })
+        };
+
+        // Function to load polygons from Google sheet
+        function reloadPolygonLayer(){
+          // Perform a HTTP GET request, which should return our GeoJson.
+          fetch(polygonAppUrl)
+          .then(response => response.json())
+          .then(data => {
+            // If the map has the polygons layer, remove it.
+            if(map.hasLayer(polygons)){
+              map.removeLayer(polygons)
+            }
+            // Redefine the polygons layer, and add to the map.
+            polygons = L.geoJson(data, {
+              onEachFeature: function(feature, layer){
+                if (feature.properties && feature.properties.name && feature.properties.year && feature.properties.description) {
+                  layer.bindPopup(
+                    "Name: " + feature.properties.name +
+                    "<br>Year: " + feature.properties.year +
+                    "<br>Description: " + feature.properties.description
+                  );
+                }
+              }
+            })
+            map.addLayer(polygons);
+          })
+        };
+
+        reloadLineLayer();
+        reloadPolygonLayer();
+        // END IMPORT GOOGLE SHEETS DATA CODE
+
 
         const featureGroup = L.featureGroup().addTo(map);
 
@@ -148,13 +232,118 @@
 
             };
 
+            console.log(polyGroup);
+
             // download each file as geojson and convert to csv if data exist
             if (lineGroup.features.length > 0) {
-              json2csv(lineGroup);
-              downloadObjectAsJson(lineGroup, 'lineData');
+
+              // for each line...
+              for (var x = 0; x < lineGroup.features.length; x++) {
+
+                //THE FOLLOWING CODE POSTS DATA TO GOOGLE SHEETS
+                // define each line
+                let eachLine = lineGroup.features[x];
+                // get the coordinates
+                let lineCoords = eachLine.geometry.coordinates;
+                // get the name input
+                let lineName = eachLine.properties.name;
+                // get the year input
+                let lineYear = eachLine.properties.year;
+                // get the description input
+                let lineDescription = eachLine.properties.description;
+                // define an empty array to hold coordinate pairs for future processing
+                let preCoords = [];
+                // for each coordinate pair...
+                for (var y = 0; y < lineCoords.length; y++) {
+                  // push each as a string to the preCoords array
+                  preCoords.push( "[" + lineCoords[y][0] + "," + lineCoords[y][1] + "]" );
+                }
+                // process the coordinate pairs by adding them to a string
+                let stringCoords = '"[' + preCoords + ']"';
+                // parse these into the proper format for the Google sheet
+                let finalCoords = JSON.parse(stringCoords);
+                // Add URL parameters to the base URL
+                url = lineAppUrl + `?coordinates=${finalCoords}`
+                // if the user added a name, add it to the url
+                if (lineName.length > 0) {
+                  url += `&name=${lineName}`;
+                }
+                // if the user added a year, add it to the url
+                if (lineYear.length > 0) {
+                  url += `&year=${lineYear}`;
+                }
+                // if the user added a description, add it to the url
+                if (lineDescription.length > 0) {
+                  url += `&description=${lineDescription}`;
+                }
+                // Post the request to the server with a HTTP POST request
+                fetch(url, {
+                  method: 'POST'
+                });
+                //END POST TO GOOGLE SHEETS
+
+              }
+
+              //json2csv(lineGroup);
+              //downloadObjectAsJson(lineGroup, 'lineData');
+
             } if (polyGroup.features.length > 0) {
-              json2csv(polyGroup);
-              downloadObjectAsJson(polyGroup, 'polyData');
+
+              // for each polygon...
+              for (var x = 0; x < polyGroup.features.length; x++) {
+
+                //THE FOLLOWING CODE POSTS DATA TO GOOGLE SHEETS
+                // define each polygon
+                let eachPolygon = polyGroup.features[x];
+                // get the coordinates
+                let polygonCoords = eachPolygon.geometry.coordinates;
+                // get the name input
+                let polygonName = eachPolygon.properties.name;
+                // get the year input
+                let polygonYear = eachPolygon.properties.year;
+                // get the description input
+                let polygonDescription = eachPolygon.properties.description;
+                // define an empty array to hold coordinate pairs for future processing
+                let preCoords = [];
+                // enter the inner array
+                for (var y = 0; y < polygonCoords.length; y++) {
+                  // define the polygon coordinate pairs
+                  let polygonCoordPair = polygonCoords[y];
+                  // for each coordinate pair...
+                  for (var z = 0; z < polygonCoordPair.length; z++) {
+                    // push each as a string to the preCoords array
+                    preCoords.push( "[" + polygonCoordPair[z][0] + "," + polygonCoordPair[z][1] + "]" );
+                  }
+                }
+                // process the coordinate pairs by adding them to a string
+                let stringCoords = '"[[[' + preCoords + ']]]"';
+                // parse these into the proper format for the Google sheet
+                let finalCoords = JSON.parse(stringCoords);
+                // Add URL parameters to the base URL
+                url = polygonAppUrl + `?coordinates=${finalCoords}`
+                // if the user added a name, add it to the url
+                if (polygonName.length > 0) {
+                  url += `&name=${polygonName}`;
+                }
+                // if the user added a year, add it to the url
+                if (polygonYear.length > 0) {
+                  url += `&year=${polygonYear}`;
+                }
+                // if the user added a description, add it to the url
+                if (polygonDescription.length > 0) {
+                  url += `&description=${polygonDescription}`;
+                }
+                // Post the request to the server with a HTTP POST request
+                fetch(url, {
+                  method: 'POST'
+                });
+                //END POST TO GOOGLE SHEETS
+
+              }
+
+              //json2csv(polyGroup);
+              //downloadObjectAsJson(polyGroup, 'polyData');
+
             } if (pointGroup.features.length > 0) {
               json2csv(pointGroup);
               downloadObjectAsJson(pointGroup, 'pointData');
