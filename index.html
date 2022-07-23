@@ -8,15 +8,13 @@
     <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
 
     <!--Add mapbox.js -->
-    <script src='https://api.tiles.mapbox.com/mapbox.js/v1.6.2/mapbox.js'></script>
-    <link href='https://api.tiles.mapbox.com/mapbox.js/v1.6.2/mapbox.css' rel='stylesheet' />
+    <script src='js/mapbox.js'></script>
+    <!--Add mapbox.css -->
+    <link href='css/mapbox.css' rel='stylesheet' />
 
     <!--Add draw plugin -->
-    <link rel='stylesheet' href='//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.css' />
-    <script src='//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.js'></script>
-
-    <!--Add papaparse to convert json files to csv files and bring in google spreadsheet data-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js "></script>
+    <link rel='stylesheet' href='css/leaflet.draw.css' />
+    <script src='js/leaflet.draw.js'></script>
 
     <style>
         body {
@@ -306,7 +304,9 @@
                 // Post the request to the server with a HTTP POST request
                 fetch(url, {
                   method: 'POST'
-                });
+                })
+                .then(response => alert('Thank you for your submission! Please refresh the map to confirm your data.', response))
+                .catch(error => alert('Error!', error.message));
                 //END POST TO GOOGLE SHEETS
 
               }
@@ -363,7 +363,9 @@
                 // Post the request to the server with a HTTP POST request
                 fetch(url, {
                   method: 'POST'
-                });
+                })
+                .then(response => alert('Thank you for your submission! Please refresh the map to confirm your data.', response))
+                .catch(error => alert('Error!', error.message));
                 //END POST TO GOOGLE SHEETS
 
               }
@@ -408,7 +410,9 @@
                 // Post the request to the server with a HTTP POST request
                 fetch(url, {
                   method: 'POST'
-                });
+                })
+                .then(response => alert('Thank you for your submission! Please refresh the map to confirm your data.', response))
+                .catch(error => alert('Error!', error.message));
                 //END POST TO GOOGLE SHEETS
 
               }
