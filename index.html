@@ -143,8 +143,8 @@
                 if (feature.properties && feature.properties.name && feature.properties.year && feature.properties.description) {
                   layer.bindPopup(
                     "Name: " + feature.properties.name +
-                    "<br>Year: " + feature.properties.year +
-                    "<br>Description: " + feature.properties.description
+                    "<br>Dedication Date: " + feature.properties.year +
+                    "<br>Ancient Source: " + feature.properties.description
                   );
                   layer.on('mouseover', function(){
                     this.openPopup();
@@ -186,8 +186,8 @@
                 if (feature.properties && feature.properties.name && feature.properties.year && feature.properties.description) {
                   layer.bindPopup(
                     "Name: " + feature.properties.name +
-                    "<br>Year: " + feature.properties.year +
-                    "<br>Description: " + feature.properties.description
+                    "<br>Dedication Date: " + feature.properties.year +
+                    "<br>Ancient Source: " + feature.properties.description
                   );
                   layer.on('mouseover', function(){
                     this.openPopup();
@@ -229,8 +229,8 @@
                 if (feature.properties && feature.properties.name && feature.properties.year && feature.properties.description) {
                   layer.bindPopup(
                     "Name: " + feature.properties.name +
-                    "<br>Year: " + feature.properties.year +
-                    "<br>Description: " + feature.properties.description
+                    "<br>Dedication Date: " + feature.properties.year +
+                    "<br>Ancient Source: " + feature.properties.description
                   );
                   layer.on('mouseover', function(e) {
                     this.openPopup();
@@ -531,7 +531,7 @@
           form.appendChild(document.createElement("br"));
 
           // Create a text box to enter the year
-          form.appendChild(document.createTextNode('Year: '));
+          form.appendChild(document.createTextNode('Dedication Date: '));
           const placeYear = form.appendChild(document.createElement('input'));
           placeYear.type = 'text';
           placeYear.id = 'yearText';
@@ -542,7 +542,7 @@
           form.appendChild(document.createElement("br"));
 
           // Create a text box to enter the description
-          form.appendChild(document.createTextNode('Description: '));
+          form.appendChild(document.createTextNode('Ancient Source: '));
           const placeDescription = form.appendChild(document.createElement('input'));
           placeDescription.type = 'text';
           placeDescription.id = 'descripText';
