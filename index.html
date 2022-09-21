@@ -27,7 +27,7 @@
             bottom: 0;
             width: 100%;
         }
-        #delete, #export {
+        #delete, #add, #export {
             position: absolute;
             top:50px;
             right:10px;
@@ -41,11 +41,15 @@
             font-size:12px;
             text-decoration:none;
           	border: 1px solid #AAA;
+            width: 77px;
         }
-        #export {
+        #add {
             top:90px;
         }
-        #delete:hover, #export:hover {
+        #export {
+            top:130px;
+        }
+        #delete:hover, #add:hover, #export:hover {
           background-color: #f8f8f8;
         }
     </style>
@@ -55,6 +59,7 @@
 
     <div id='map'></div>
     <div id='delete'>Delete Features</div>
+    <a href='#' id='add'>Add Features</a>
     <a href='#' id='export'>Export Features</a>
 
     <script>
@@ -108,6 +113,20 @@
         let points;
         let pointAppUrl = "https://script.google.com/macros/s/AKfycbzP3u_Qo8bJjJhP0l1DkJ941sZZAekr8XwiytOmpOZaWLACyszFVlz7pSK3yXXSc91iOw/exec";
 
+        // Empty feature collections to hold all map data for exporting
+        const geoLines = {
+          type: 'FeatureCollection',
+          features: []
+        }
+        const geoPolys = {
+          type: 'FeatureCollection',
+          features: []
+        }
+        const geoPoints = {
+          type: 'FeatureCollection',
+          features: []
+        }
+
         // Function to load lines from Google sheet
         function reloadLineLayer(){
           // Perform a HTTP GET request, which should return our GeoJson.
@@ -143,6 +162,11 @@
               }
             })
             map.addLayer(lines);
+
+            lines.eachLayer(function(e) {
+              geoLines.features.push(e.feature);
+            });
+
           })
         };
 
@@ -181,6 +205,11 @@
               }
             })
             map.addLayer(polygons);
+
+            polygons.eachLayer(function(e) {
+              geoPolys.features.push(e.feature);
+            });
+
           })
         };
 
@@ -229,6 +258,11 @@
               }
             })
             map.addLayer(points);
+
+            points.eachLayer(function(e) {
+              geoPoints.features.push(e.feature);
+            });
+
           })
         };
 
@@ -283,7 +317,7 @@
             featureGroup.clearLayers();
         }
 
-        document.getElementById('export').onclick = function(e) {
+        document.getElementById('add').onclick = function(e) {
 
             // Extract GeoJson from featureGroup
             const data = featureGroup.toGeoJSON();
@@ -362,7 +396,6 @@
               }
 
               //json2csv(lineGroup);
-              //downloadObjectAsJson(lineGroup, 'lineData');
 
             } if (polyGroup.features.length > 0) {
 
@@ -421,7 +454,6 @@
               }
 
               //json2csv(polyGroup);
-              downloadObjectAsJson(polyGroup, 'polyData');
 
             } if (pointGroup.features.length > 0) {
 
@@ -468,9 +500,16 @@
               }
 
               //json2csv(pointGroup);
-              //downloadObjectAsJson(pointGroup, 'pointData');
+
             }
 
+        }
+
+        document.getElementById('export').onclick = function(e) {
+          // download all map lines, points, and polygons
+          downloadObjectAsJson(geoLines, 'lineData');
+          downloadObjectAsJson(geoPolys, 'polyData');
+          downloadObjectAsJson(geoPoints, 'pointData');
         };
 
         function addPopup(layer) {
@@ -534,7 +573,7 @@
           downloadAnchorNode.click();
           downloadAnchorNode.remove();
         };
-/*
+
         // a function to convert json to csv format
         function json2csv(layer) {
           const items = layer.features;
@@ -546,7 +585,7 @@
           ].join('\r\n');
           console.log(csv);
         };
-*/
+
     </script>
 
 </body>
