@@ -27,7 +27,7 @@
             bottom: 0;
             width: 100%;
         }
-        #delete, #add, #save, #export {
+        #delete, #add, #export {
             position: absolute;
             top:50px;
             right:10px;
@@ -46,13 +46,10 @@
         #add {
             top:90px;
         }
-        #save {
+        #export {
             top:130px;
         }
-        #export {
-            top:170px;
-        }
-        #delete:hover, #add:hover, #save:hover, #export:hover {
+        #delete:hover, #add:hover, #export:hover {
           background-color: #f8f8f8;
         }
         /* Change cursor when mousing over clickable layer */
@@ -66,8 +63,7 @@
 
     <div id='map'></div>
     <div id='delete'>Delete Your Features</div>
-    <a href='#' id='add'>Add Your Features</a>
-    <a href='#' id='save'>Export Your Features</a>
+    <a href='#' id='add'>Add & Export Your Features</a>
     <a href='#' id='export'>Export All Features</a>
 
     <script>
@@ -134,21 +130,7 @@
           type: 'FeatureCollection',
           features: []
         }
-/*
-        // Empty feature collections to hold user's map data for exporting
-        const yourLines = {
-          type: 'FeatureCollection',
-          features: []
-        }
-        const yourPolys = {
-          type: 'FeatureCollection',
-          features: []
-        }
-        const yourPoints = {
-          type: 'FeatureCollection',
-          features: []
-        }
-*/
+
         // Function to load lines from Google sheet
         function reloadLineLayer(){
           // Perform a HTTP GET request, which should return our GeoJson.
@@ -417,7 +399,10 @@
 
               }
 
-              //json2csv(lineGroup);
+              // Download geojson file if data present
+              if (lineGroup.features.length !== 0) {
+                downloadObjectAsJson(lineGroup, 'lineData');
+              }
 
             } if (polyGroup.features.length > 0) {
 
@@ -475,7 +460,10 @@
 
               }
 
-              //json2csv(polyGroup);
+              // Download geojson file if data present
+              if (polyGroup.features.length !== 0) {
+                downloadObjectAsJson(polyGroup, 'polyData');
+              }
 
             } if (pointGroup.features.length > 0) {
 
@@ -521,28 +509,26 @@
 
               }
 
-              //json2csv(pointGroup);
+              // Download geojson file if data present
+              if (pointGroup.features.length !== 0) {
+                downloadObjectAsJson(pointGroup, 'pointData');
+              }
 
             }
 
         }
 
-        document.getElementById('save').onclick = function(e) {
-          downloadObjectAsJson(lineGroup, 'lineData');
-          downloadObjectAsJson(polyGroup, 'polyData');
-          downloadObjectAsJson(pointGroup, 'pointData');
-          if (lineGroup.features.length == 0 && pointGroup.features.length == 0 && polyGroup.features.length == 0) {
-            alert('Please add your features to the map before exporting.');
-          } else {
-            alert('Exporting. Thank you.');
-          }
-        };
-
         document.getElementById('export').onclick = function(e) {
           // download all map lines, points, and polygons
-          downloadObjectAsJson(geoLines, 'lineData');
-          downloadObjectAsJson(geoPolys, 'polyData');
-          downloadObjectAsJson(geoPoints, 'pointData');
+          if (geoLines.features.length !== 0) {
+            downloadObjectAsJson(geoLines, 'lineData');
+          }
+          if (geoPolys.features.length !== 0) {
+            downloadObjectAsJson(geoPolys, 'polyData');
+          }
+          if (geoPoints.features.length !== 0) {
+            downloadObjectAsJson(geoPoints, 'pointData');
+          }
         };
 
         function addPopup(layer) {
