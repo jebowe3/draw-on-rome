@@ -27,7 +27,7 @@
             bottom: 0;
             width: 100%;
         }
-        #delete, #add, #export {
+        #delete, #add, #save, #export {
             position: absolute;
             top:50px;
             right:10px;
@@ -46,10 +46,13 @@
         #add {
             top:90px;
         }
-        #export {
+        #save {
             top:130px;
         }
-        #delete:hover, #add:hover, #export:hover {
+        #export {
+            top:170px;
+        }
+        #delete:hover, #add:hover, #save:hover, #export:hover {
           background-color: #f8f8f8;
         }
         /* Change cursor when mousing over clickable layer */
@@ -62,9 +65,10 @@
 <body>
 
     <div id='map'></div>
-    <div id='delete'>Delete Features</div>
-    <a href='#' id='add'>Add Features</a>
-    <a href='#' id='export'>Export Features</a>
+    <div id='delete'>Delete Your Features</div>
+    <a href='#' id='add'>Add Your Features</a>
+    <a href='#' id='save'>Export Your Features</a>
+    <a href='#' id='export'>Export All Features</a>
 
     <script>
         // Define the map
@@ -130,7 +134,21 @@
           type: 'FeatureCollection',
           features: []
         }
-
+/*
+        // Empty feature collections to hold user's map data for exporting
+        const yourLines = {
+          type: 'FeatureCollection',
+          features: []
+        }
+        const yourPolys = {
+          type: 'FeatureCollection',
+          features: []
+        }
+        const yourPoints = {
+          type: 'FeatureCollection',
+          features: []
+        }
+*/
         // Function to load lines from Google sheet
         function reloadLineLayer(){
           // Perform a HTTP GET request, which should return our GeoJson.
@@ -508,6 +526,17 @@
             }
 
         }
+
+        document.getElementById('save').onclick = function(e) {
+          downloadObjectAsJson(lineGroup, 'lineData');
+          downloadObjectAsJson(polyGroup, 'polyData');
+          downloadObjectAsJson(pointGroup, 'pointData');
+          if (lineGroup.features.length == 0 && pointGroup.features.length == 0 && polyGroup.features.length == 0) {
+            alert('Please add your features to the map before exporting.');
+          } else {
+            alert('Exporting. Thank you.');
+          }
+        };
 
         document.getElementById('export').onclick = function(e) {
           // download all map lines, points, and polygons
