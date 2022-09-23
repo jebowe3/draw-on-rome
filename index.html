@@ -107,15 +107,15 @@
         // Lines
         let lineLocation;
         let lines;
-        let lineAppUrl = "https://script.google.com/macros/s/AKfycbwtKts2LMHDz4Vu3x4qie9eUJ8lWE5NmoCbApqzZ3iab63r0SNJSvTNVb3ql5lludeU/exec";
+        let lineAppUrl = "https://script.google.com/macros/s/AKfycbwOwjlmdYvnuUciLqUP70JheWun8OlaUrro-R1GfSA2-meqi6m7QQfUeCW0CDgq0r5M/exec";
         // Polygons
         let polygonLocation;
         let polygons;
-        let polygonAppUrl = "https://script.google.com/macros/s/AKfycbyJqhYZb4aophEnTYXwd62Re8pCWiE5_1qli8oBpK2PzfE20die8jVcG-OrRhTBh4uuZQ/exec";
+        let polygonAppUrl = "https://script.google.com/macros/s/AKfycbzSpW2NClt-6IbYKunZgovv6Zbl2HGaUG51jnKgVNYbKb5cP1z_nV8WtqxM7pmadq1KZQ/exec";
         // Points
         let pointLocation;
         let points;
-        let pointAppUrl = "https://script.google.com/macros/s/AKfycbzP3u_Qo8bJjJhP0l1DkJ941sZZAekr8XwiytOmpOZaWLACyszFVlz7pSK3yXXSc91iOw/exec";
+        let pointAppUrl = "https://script.google.com/macros/s/AKfycbyNWLQXDQNDWhITt7CyHQsoy9cBcDfskjSxaWyqDFJMcMU6Egw7taYU9SB0eTDc-lWOhg/exec";
 
         // Empty feature collections to hold all map data for exporting
         const geoLines = {
@@ -144,11 +144,13 @@
             // Redefine the lines layer, and add to the map.
             lines = L.geoJson(data, {
               onEachFeature: function(feature, layer){
-                if (feature.properties && feature.properties.name && feature.properties.year && feature.properties.description) {
+                //if (feature.properties && feature.properties.name && feature.properties.year && feature.properties.description && feature.properties.about && feature.properties.contributor) {
                   layer.bindPopup(
                     "Name: " + feature.properties.name +
                     "<br>Dedication Date: " + feature.properties.year +
-                    "<br>Ancient Source: " + feature.properties.description
+                    "<br>Ancient Source: " + feature.properties.description +
+                    "<br>About: " + feature.properties.about +
+                    "<br>Contributor: " + feature.properties.contributor
                   );
                   layer.on('mouseover', function(){
                     this.openPopup();
@@ -162,7 +164,7 @@
                       color: '#0033ff'
                     });
                   });
-                }
+                //}
               }
             })
             map.addLayer(lines);
@@ -187,11 +189,13 @@
             // Redefine the polygons layer, and add to the map.
             polygons = L.geoJson(data, {
               onEachFeature: function(feature, layer){
-                if (feature.properties && feature.properties.name && feature.properties.year && feature.properties.description) {
+                //if (feature.properties && feature.properties.name && feature.properties.year && feature.properties.description && feature.properties.about && feature.properties.contributor) {
                   layer.bindPopup(
                     "Name: " + feature.properties.name +
                     "<br>Dedication Date: " + feature.properties.year +
-                    "<br>Ancient Source: " + feature.properties.description
+                    "<br>Ancient Source: " + feature.properties.description +
+                    "<br>About: " + feature.properties.about +
+                    "<br>Contributor: " + feature.properties.contributor
                   );
                   layer.on('mouseover', function(){
                     this.openPopup();
@@ -200,12 +204,13 @@
                     });
                   });
                   layer.on('mouseout', function() {
-                    this.invoke('closePopup');
+                    //this.invoke('closePopup');
+                    this.closePopup();
                     this.setStyle({
                       color: '#0033ff'
                     });
                   });
-                }
+                //}
               }
             })
             map.addLayer(polygons);
@@ -213,7 +218,6 @@
             polygons.eachLayer(function(e) {
               geoPolys.features.push(e.feature);
             });
-
           })
         };
 
@@ -230,11 +234,13 @@
             // Redefine the points layer, and add to the map.
             points = L.geoJson(data, {
               onEachFeature: function(feature, layer){
-                if (feature.properties && feature.properties.name && feature.properties.year && feature.properties.description) {
+                //if (feature.properties && feature.properties.name && feature.properties.year && feature.properties.description && feature.properties.about && feature.properties.contributor) {
                   layer.bindPopup(
                     "Name: " + feature.properties.name +
                     "<br>Dedication Date: " + feature.properties.year +
-                    "<br>Ancient Source: " + feature.properties.description
+                    "<br>Ancient Source: " + feature.properties.description +
+                    "<br>About: " + feature.properties.about +
+                    "<br>Contributor: " + feature.properties.contributor
                   );
                   layer.on('mouseover', function(e) {
                     this.openPopup();
@@ -258,7 +264,7 @@
                       shadowSize: [41, 41]
                     }));
                   });
-                }
+                //}
               }
             })
             map.addLayer(points);
@@ -309,6 +315,8 @@
             props.name = null;
             props.year = null;
             props.description = null;
+            props.about = null;
+            props.contributor = null;
 
             // Each time a feature is created, it is added to the over arching feature group
             featureGroup.addLayer(layer);
@@ -364,6 +372,10 @@
                 let lineYear = eachLine.properties.year;
                 // get the description input
                 let lineDescription = eachLine.properties.description;
+                // get the about input
+                let lineAbout = eachLine.properties.about;
+                // get the contributor input
+                let lineContributor = eachLine.properties.contributor;
                 // define an empty array to hold coordinate pairs for future processing
                 let preCoords = [];
                 // for each coordinate pair...
@@ -388,6 +400,14 @@
                 // if the user added a description, add it to the url
                 if (lineDescription.length > 0) {
                   url += `&description=${lineDescription}`;
+                }
+                // if the user added an about, add it to the url
+                if (lineAbout.length > 0) {
+                  url += `&about=${lineAbout}`;
+                }
+                // if the user added a contributor, add it to the url
+                if (lineContributor.length > 0) {
+                  url += `&contributor=${lineContributor}`;
                 }
                 // Post the request to the server with a HTTP POST request
                 fetch(url, {
@@ -420,6 +440,10 @@
                 let polygonYear = eachPolygon.properties.year;
                 // get the description input
                 let polygonDescription = eachPolygon.properties.description;
+                // get the about input
+                let polygonAbout = eachPolygon.properties.about;
+                // get the contributor input
+                let polygonContributor = eachPolygon.properties.contributor;
                 // define an empty array to hold coordinate pairs for future processing
                 let preCoords = [];
                 // enter the inner array
@@ -433,7 +457,7 @@
                   }
                 }
                 // process the coordinate pairs by adding them to a string
-                let stringCoords = '"[[[' + preCoords + ']]]"';
+                let stringCoords = '"[[' + preCoords + ']]"';
                 // parse these into the proper format for the Google sheet
                 let finalCoords = JSON.parse(stringCoords);
                 // Add URL parameters to the base URL
@@ -449,6 +473,14 @@
                 // if the user added a description, add it to the url
                 if (polygonDescription.length > 0) {
                   url += `&description=${polygonDescription}`;
+                }
+                // if the user added an about, add it to the url
+                if (polygonAbout.length > 0) {
+                  url += `&about=${polygonAbout}`;
+                }
+                // if the user added a contributor, add it to the url
+                if (polygonContributor.length > 0) {
+                  url += `&contributor=${polygonContributor}`;
                 }
                 // Post the request to the server with a HTTP POST request
                 fetch(url, {
@@ -481,6 +513,10 @@
                 let pointYear = eachPoint.properties.year;
                 // get the description input
                 let pointDescription = eachPoint.properties.description;
+                // get the about input
+                let pointAbout = eachPoint.properties.about;
+                // get the contributor input
+                let pointContributor = eachPoint.properties.contributor;
                 // process the coordinate pairs by adding them to a string
                 let stringCoords = '"[' + pointCoords + ']"';
                 // parse these into the proper format for the Google sheet
@@ -498,6 +534,14 @@
                 // if the user added a description, add it to the url
                 if (pointDescription.length > 0) {
                   url += `&description=${pointDescription}`;
+                }
+                // if the user added a description, add it to the url
+                if (pointAbout.length > 0) {
+                  url += `&about=${pointAbout}`;
+                }
+                // if the user added a description, add it to the url
+                if (pointContributor.length > 0) {
+                  url += `&contributor=${pointContributor}`;
                 }
                 // Post the request to the server with a HTTP POST request
                 fetch(url, {
@@ -568,16 +612,42 @@
           placeDescription.name = 'descripTex';
           placeDescription.value = '';
 
+          // Add a line break in the form
+          form.appendChild(document.createElement("br"));
+
+          // Create a text box to enter the about
+          form.appendChild(document.createTextNode('About: '));
+          const placeAbout = form.appendChild(document.createElement('input'));
+          placeAbout.type = 'text';
+          placeAbout.id = 'descripText';
+          placeAbout.name = 'descripTex';
+          placeAbout.value = '';
+
+          // Add a line break in the form
+          form.appendChild(document.createElement("br"));
+
+          // Create a text box to enter the contributor
+          form.appendChild(document.createTextNode('Your Name: '));
+          const placeContributor = form.appendChild(document.createElement('input'));
+          placeContributor.type = 'text';
+          placeContributor.id = 'descripText';
+          placeContributor.name = 'descripTex';
+          placeContributor.value = '';
+
           // Listen for a keyup
           form.addEventListener("keyup", function () {
             layer.feature.properties.name = placeName.value;
             layer.feature.properties.year = placeYear.value;
             layer.feature.properties.description = placeDescription.value;
+            layer.feature.properties.about = placeAbout.value;
+            layer.feature.properties.contributor = placeContributor.value;
           });
           layer.on("popupopen", function () {
             placeName.value = layer.feature.properties.name;
             placeYear.value = layer.feature.properties.year;
             placeDescription.value = layer.feature.properties.description;
+            placeAbout.value = layer.feature.properties.about;
+            placeContributor.value = layer.feature.properties.contributor;
             form.focus();
           });
           layer.bindPopup(form).openPopup();
@@ -592,7 +662,7 @@
           downloadAnchorNode.click();
           downloadAnchorNode.remove();
         };
-
+/*
         // a function to convert json to csv format
         function json2csv(layer) {
           const items = layer.features;
@@ -602,9 +672,8 @@
             header.join(','), // header row first
             ...items.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','))
           ].join('\r\n');
-          console.log(csv);
         };
-
+*/
     </script>
 
 </body>
